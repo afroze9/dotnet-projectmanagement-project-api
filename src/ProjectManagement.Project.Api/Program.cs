@@ -9,15 +9,15 @@ public class Program
     public static void Main(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-        
+
         // Settings for docker
-        builder.Configuration.AddJsonFile("hostsettings.json", optional: true);
+        builder.Configuration.AddJsonFile("hostsettings.json", true);
 
         // Settings for consul kv
         ConsulKVSettings consulKvSettings = new ();
         builder.Configuration.GetRequiredSection("ConsulKV").Bind(consulKvSettings);
         builder.Configuration.AddConsulKV(consulKvSettings);
-        
+
         // Add services to the container.
         builder.Services.AddDiscoveryClient();
         builder.Services.AddControllers();
@@ -36,7 +36,7 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-        
+
         app.MapControllers();
 
         app.Run();
