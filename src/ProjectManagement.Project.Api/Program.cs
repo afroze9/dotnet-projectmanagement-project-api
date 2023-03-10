@@ -14,9 +14,9 @@ public class Program
         builder.Configuration.AddJsonFile("hostsettings.json", optional: true);
 
         // Settings for consul kv
-        ConsulKVConfiguration consulKvConfig = new ();
-        builder.Configuration.GetRequiredSection("ConsulKV").Bind(consulKvConfig);
-        builder.Configuration.AddConsulKV(consulKvConfig);
+        ConsulKVSettings consulKvSettings = new ();
+        builder.Configuration.GetRequiredSection("ConsulKV").Bind(consulKvSettings);
+        builder.Configuration.AddConsulKV(consulKvSettings);
         
         // Add services to the container.
         builder.Services.AddDiscoveryClient();

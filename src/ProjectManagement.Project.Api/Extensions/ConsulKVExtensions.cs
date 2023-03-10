@@ -5,14 +5,14 @@ namespace ProjectManagement.Project.Api.Extensions;
 
 public static class ConsulKVExtensions
 {
-    public static void AddConsulKV(this IConfigurationBuilder builder, ConsulKVConfiguration configuration)
+    public static void AddConsulKV(this IConfigurationBuilder builder, ConsulKVSettings settings)
     {
-        builder.AddConsul(configuration.Key, options =>
+        builder.AddConsul(settings.Key, options =>
         {
             options.ConsulConfigurationOptions = config =>
             {
-                config.Address = new Uri(configuration.Url);
-                config.Token = configuration.Token;
+                config.Address = new Uri(settings.Url);
+                config.Token = settings.Token;
             };
 
             options.Optional = true;
