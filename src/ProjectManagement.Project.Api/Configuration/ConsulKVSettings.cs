@@ -1,4 +1,4 @@
-﻿namespace ProjectManagement.Project.Api.Configuration;
+﻿namespace ProjectManagement.ProjectAPI.Configuration;
 
 public class ConsulKVSettings
 {
