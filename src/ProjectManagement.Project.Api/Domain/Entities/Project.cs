@@ -6,19 +6,18 @@ namespace ProjectManagement.ProjectAPI.Domain.Entities;
 
 public class Project : EntityBase, IAggregateRoot, IAuditable<string>
 {
-    public string CreatedBy { get; set; } = string.Empty;
+    private readonly List<TodoItem> _todoItems = new ();
 
-    public DateTime CreatedOn { get; set; }
-
-    public string ModifiedBy { get; set; } = string.Empty;
-
-    public DateTime ModifiedOn { get; set; }
+    public Project(string name, Priority priority, int? companyId)
+    {
+        Name = name;
+        Priority = priority;
+        CompanyId = companyId;
+    }
 
     public int? CompanyId { get; set; }
-    
-    public string Name { get; private set; }
 
-    private readonly List<TodoItem> _todoItems = new ();
+    public string Name { get; private set; }
 
     public IEnumerable<TodoItem> TodoItems => _todoItems.AsReadOnly();
 
@@ -28,12 +27,13 @@ public class Project : EntityBase, IAggregateRoot, IAuditable<string>
         _todoItems.All(x => x.IsCompleted) ? ProjectStatus.Completed :
         _todoItems.All(x => !x.IsCompleted) ? ProjectStatus.NotStarted : ProjectStatus.InProgress;
 
-    public Project(string name, Priority priority, int? companyId)
-    {
-        Name = name;
-        Priority = priority;
-        CompanyId = companyId;
-    }
+    public string CreatedBy { get; set; } = string.Empty;
+
+    public DateTime CreatedOn { get; set; }
+
+    public string ModifiedBy { get; set; } = string.Empty;
+
+    public DateTime ModifiedOn { get; set; }
 
     public void AddTodoItem(TodoItem item)
     {

@@ -6,14 +6,6 @@ namespace ProjectManagement.ProjectAPI.Domain.Entities;
 
 public class TodoItem : EntityBase, IAggregateRoot, IAuditable<string>
 {
-    public string CreatedBy { get; set; } = string.Empty;
-
-    public DateTime CreatedOn { get; set; }
-
-    public string ModifiedBy { get; set; } = string.Empty;
-
-    public DateTime ModifiedOn { get; set; }
-
     required public string Title { get; set; }
 
     public string Description { get; set; } = string.Empty;
@@ -22,12 +14,20 @@ public class TodoItem : EntityBase, IAggregateRoot, IAuditable<string>
 
     public bool IsCompleted { get; private set; }
 
+    public string CreatedBy { get; set; } = string.Empty;
+
+    public DateTime CreatedOn { get; set; }
+
+    public string ModifiedBy { get; set; } = string.Empty;
+
+    public DateTime ModifiedOn { get; set; }
+
     public void MarkComplete()
     {
         if (!IsCompleted)
         {
             IsCompleted = true;
-            ItemCompletedEvent @event = new ItemCompletedEvent(this);
+            ItemCompletedEvent @event = new (this);
             RegisterDomainEvent(@event);
         }
     }
@@ -35,7 +35,7 @@ public class TodoItem : EntityBase, IAggregateRoot, IAuditable<string>
     public void AssignTodoItem(string assignedToId)
     {
         AssignedToId = assignedToId;
-        TodoItemAssignedEvent @event = new TodoItemAssignedEvent(this, assignedToId);
+        TodoItemAssignedEvent @event = new (this, assignedToId);
         RegisterDomainEvent(@event);
     }
 }

@@ -20,6 +20,8 @@ namespace ProjectManagement.ProjectAPI.Extensions;
 [ExcludeFromCodeCoverage]
 public static class DependencyInjectionExtensions
 {
+    private static readonly string[] Actions = { "read", "write", "update", "delete" };
+
     public static void AddConsulKv(this IConfigurationBuilder builder, ConsulKVSettings settings)
     {
         builder.AddConsul(settings.Key, options =>
@@ -140,11 +142,9 @@ public static class DependencyInjectionExtensions
         services.AddValidatorsFromAssemblyContaining(typeof(Program));
     }
 
-    private static readonly string[] _actions = { "read", "write", "update", "delete" };
-
     private static void AddCrudPolicies(this AuthorizationOptions options, string resource)
     {
-        foreach (string action in _actions)
+        foreach (string action in Actions)
         {
             options.AddPolicy($"{action}:{resource}",
                 policy => policy.Requirements.Add(new ScopeRequirement($"{action}:{resource}")));
