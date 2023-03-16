@@ -2,4 +2,4 @@
 
 namespace ProjectManagement.ProjectAPI.Models;
 
-public record ProjectRequestModel(string Name, Priority Priority);
+public record ProjectRequestModel(string Name, int? CompanyId, Priority Priority = Priority.Medium);

@@ -14,6 +14,8 @@ public class Project : EntityBase, IAggregateRoot, IAuditable<string>
 
     public DateTime ModifiedOn { get; set; }
 
+    public int? CompanyId { get; set; }
+    
     public string Name { get; private set; }
 
     private readonly List<TodoItem> _todoItems = new ();
@@ -26,10 +28,11 @@ public class Project : EntityBase, IAggregateRoot, IAuditable<string>
         _todoItems.All(x => x.IsCompleted) ? ProjectStatus.Completed :
         _todoItems.All(x => !x.IsCompleted) ? ProjectStatus.NotStarted : ProjectStatus.InProgress;
 
-    public Project(string name, Priority priority)
+    public Project(string name, Priority priority, int? companyId)
     {
         Name = name;
         Priority = priority;
+        CompanyId = companyId;
     }
 
     public void AddTodoItem(TodoItem item)

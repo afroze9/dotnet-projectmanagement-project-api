@@ -1,10 +1,13 @@
 using AutoMapper;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.ProjectAPI.Abstractions;
 using ProjectManagement.ProjectAPI.Domain.Entities;
 using ProjectManagement.ProjectAPI.Domain.Specifications;
 using ProjectManagement.ProjectAPI.Extensions;
 using ProjectManagement.ProjectAPI.Models;
+using ValidationResult = FluentValidation.Results.ValidationResult;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddApplicationConfiguration();
@@ -23,29 +26,47 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app
-    .MapGet("api/v1/Project",
-        async (IRepository<Project> repository) =>
-            Results.Ok(await repository.ListAsync(new AllProjectsWithTagsSpec())))
-    .Produces<List<Project>>();
+app.MapGet("api/v1/Project",
+        async (IRepository<Project> repository, int? companyId) =>
+            Results.Ok(await repository.ListAsync(new AllProjectsByCompanyIdWithTagsSpec(companyId))))
+    .Produces<List<Project>>()
+    .RequireAuthorization("read:project")
+    .WithTags("Project");
 
-app
-    .MapGet("api/v1/Project/{id}",
+app.MapGet("api/v1/Project/{id}",
         async (int id, IRepository<Project> repository) => Results.Ok(await repository.GetByIdAsync(id)))
-    .Produces<Project>();
+   .Produces<Project>()
+   .RequireAuthorization("read:project")
+   .WithTags("Project");
 
-app
-    .MapPost("api/v1/Project", async (IRepository<Project> repository, IMapper mapper, ProjectRequestModel req) =>
+app.MapPost("api/v1/Project", async (IRepository<Project> repository, IMapper mapper, IValidator<ProjectRequestModel> validator, ProjectRequestModel req) =>
     {
+        ValidationResult validationResult = await validator.ValidateAsync(req);
+
+        if (!validationResult.IsValid)
+        {
+            return Results.BadRequest(validationResult.Errors);
+        }
+        
         Project? project = mapper.Map<Project>(req);
         Project result = await repository.AddAsync(project);
 
         return Results.Created($"api/v1/Project/{result.Id}", result);
     })
-    .Produces<ActionResult<Project>>(StatusCodes.Status201Created);
+   .Produces<ActionResult<Project>>(StatusCodes.Status201Created)
+   .Produces<ActionResult<List<ValidationFailure>>>(StatusCodes.Status400BadRequest)
+   .RequireAuthorization("write:project")
+   .WithTags("Project");
 
-app.MapPut("api/v1/Project/{id}", async (int id, IRepository<Project> repository, ProjectRequestModel req) =>
+app.MapPut("api/v1/Project/{id}", async (int id, IRepository<Project> repository, IValidator<ProjectRequestModel> validator, ProjectRequestModel req) =>
     {
+        ValidationResult validationResult = await validator.ValidateAsync(req);
+
+        if (!validationResult.IsValid)
+        {
+            return Results.BadRequest(validationResult.Errors);
+        }
+        
         Project? projectToUpdate = await repository.GetByIdAsync(id);
 
         if (projectToUpdate == null)
@@ -60,7 +81,10 @@ app.MapPut("api/v1/Project/{id}", async (int id, IRepository<Project> repository
         return Results.Ok(projectToUpdate);
     })
     .Produces<IActionResult>(StatusCodes.Status404NotFound)
-    .Produces<ActionResult<Project>>();
+    .Produces<ActionResult<Project>>()
+    .Produces<ActionResult<List<ValidationFailure>>>(StatusCodes.Status400BadRequest)
+    .RequireAuthorization("update:project")
+    .WithTags("Project");
 
 app.MapDelete("api/v1/Project/{id}", async (int id, IRepository<Project> repository) =>
     {
@@ -73,27 +97,60 @@ app.MapDelete("api/v1/Project/{id}", async (int id, IRepository<Project> reposit
 
         return Results.NoContent();
     })
-    .Produces<IActionResult>(StatusCodes.Status204NoContent);
+    .Produces<IActionResult>(StatusCodes.Status204NoContent)
+    .RequireAuthorization("delete:project")
+    .WithTags("Project");
 
-app.MapPost("api/v1/Project/{id}/Todo",
-    async (int id, TodoItemRequestModel req, IRepository<Project> repository, IMapper mapper) =>
-    {
-        Project? dbProject = await repository.GetByIdAsync(id);
-
-        if (dbProject == null)
+app.MapPost("api/v1/Project/{id}/Todo", 
+        async (int id, TodoItemRequestModel req, IRepository<Project> repository, IMapper mapper) =>
         {
-            return Results.NotFound();
-        }
+            Project? dbProject = await repository.GetByIdAsync(id);
 
-        TodoItem? todoItem = mapper.Map<TodoItem>(req);
-        dbProject.AddTodoItem(todoItem);
+            if (dbProject == null)
+            {
+                return Results.NotFound();
+            }
 
-        await repository.SaveChangesAsync();
-        return Results.Created($"api/v1/Todo/{todoItem.Id}", todoItem);
-    });
+            TodoItem? todoItem = mapper.Map<TodoItem>(req);
+            dbProject.AddTodoItem(todoItem);
 
-app.MapGet("api/v1/Todo/{id}",
-    async (int id, IRepository<TodoItem> repository) => Results.Ok(await repository.GetByIdAsync(id)));
+            await repository.SaveChangesAsync();
+            return Results.Created($"api/v1/Todo/{todoItem.Id}", todoItem);
+        })
+    .RequireAuthorization("write:project")
+    .WithTags("Todo");
+
+app.MapGet("api/v1/Todo/{id}", 
+        async (int id, IRepository<TodoItem> repository) => Results.Ok(await repository.GetByIdAsync(id)))
+    .Produces<ActionResult<TodoItem>>(StatusCodes.Status200OK)
+    .RequireAuthorization("read:project")
+    .WithTags("Todo");
+
+app.MapPut("api/v1/Todo/{id}",
+        async (int id, IRepository<TodoItem> repository, TodoItemAssignmentUpdateModel req) =>
+        {
+            var itemToUpdate = await repository.GetByIdAsync(id);
+
+            if (itemToUpdate == null)
+            {
+                return Results.BadRequest();
+            }
+
+            itemToUpdate.AssignTodoItem(req.AssignedToId);
+
+            if (req.MarkComplete)
+            {
+                itemToUpdate.MarkComplete();
+            }
+
+            await repository.SaveChangesAsync();
+
+            return Results.Ok(itemToUpdate);
+        })
+    .Produces<ActionResult<TodoItem>>(StatusCodes.Status200OK)
+    .Produces<IActionResult>(StatusCodes.Status400BadRequest)
+    .RequireAuthorization("update:project")
+    .WithTags("Todo");
 
 app.Run();
 
