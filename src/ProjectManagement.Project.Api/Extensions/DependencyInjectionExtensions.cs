@@ -140,6 +140,11 @@ public static class DependencyInjectionExtensions
         services.AddSecurity();
         services.AddTelemetry(configuration);
         services.AddValidatorsFromAssemblyContaining(typeof(Program));
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy => { policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
+        });
     }
 
     private static void AddCrudPolicies(this AuthorizationOptions options, string resource)
