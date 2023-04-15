@@ -2,7 +2,9 @@ using AutoMapper;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.ProjectAPI.Abstractions;
+using ProjectManagement.ProjectAPI.Data;
 using ProjectManagement.ProjectAPI.Domain.Entities;
 using ProjectManagement.ProjectAPI.Domain.Specifications;
 using ProjectManagement.ProjectAPI.Extensions;
@@ -14,6 +16,10 @@ builder.Logging.AddApplicationLogging(builder.Configuration);
 builder.Services.RegisterDependencies(builder.Configuration);
 
 WebApplication app = builder.Build();
+
+using IServiceScope scope = app.Services.CreateScope();
+ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+db.Database.Migrate();
 
 if (app.Environment.IsDevelopment())
 {
@@ -28,7 +34,10 @@ app.UseAuthorization();
 
 app.MapGet("api/v1/Project",
         async (IRepository<Project> repository, int? companyId) =>
-            Results.Ok(await repository.ListAsync(new AllProjectsByCompanyIdWithTagsSpec(companyId))))
+        {
+            List<Project> projects = await repository.ListAsync(new AllProjectsByCompanyIdWithTagsSpec(companyId));
+            return projects.Count == 0 ? Results.NotFound() : Results.Ok(projects);
+        })
     .Produces<List<Project>>()
     .RequireAuthorization("read:project")
     .WithTags("Project");

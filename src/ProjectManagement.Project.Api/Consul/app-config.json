@@ -2,6 +2,10 @@
   "PersistenceSettings": {
     "ConnectionString": "User ID=developer;Password=dev123;Host=localhost;Port=5439;Database=project_management_project"
   },
+  "Auth0Settings": {
+    "Authority": "https://teamly.us.auth0.com",
+    "Audience": "projectmanagement"
+  },
   "SerilogSettings": {
     "ElasticSearchSettings": {
       "Uri": "https://localhost:9200",

@@ -50,17 +50,21 @@ public static class DependencyInjectionExtensions
         });
     }
 
-    private static void AddSecurity(this IServiceCollection services)
+    private static void AddSecurity(this IServiceCollection services, IConfiguration configuration)
     {
+        Auth0Settings auth0Settings = new ();
+        configuration.GetRequiredSection(nameof(Auth0Settings)).Bind(auth0Settings);
+
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         }).AddJwtBearer(options =>
         {
-            options.Authority = "https://afrozeprojectmanagement.us.auth0.com/";
-            options.Audience = "company";
+            options.Authority = auth0Settings.Authority;
+            options.Audience = auth0Settings.Audience;
         });
+
 
         services.AddAuthorization(options => { options.AddCrudPolicies("project"); });
         services.AddSingleton<IAuthorizationHandler, ScopeRequirementHandler>();
@@ -137,7 +141,7 @@ public static class DependencyInjectionExtensions
         services.AddDiscoveryClient();
         services.AddMediatR(options => options.RegisterServicesFromAssembly(typeof(Program).Assembly));
         services.AddPersistence(configuration);
-        services.AddSecurity();
+        services.AddSecurity(configuration);
         services.AddTelemetry(configuration);
         services.AddValidatorsFromAssemblyContaining(typeof(Program));
 
