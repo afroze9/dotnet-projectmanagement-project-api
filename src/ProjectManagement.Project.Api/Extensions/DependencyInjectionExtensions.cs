@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using ProjectManagement.ProjectAPI.Abstractions;
@@ -120,16 +121,32 @@ public static class DependencyInjectionExtensions
         TelemetrySettings telemetrySettings = new ();
         configuration.GetRequiredSection(nameof(TelemetrySettings)).Bind(telemetrySettings);
 
-        services.AddOpenTelemetry()
-            .ConfigureResource(c =>
+        services
+            .AddOpenTelemetry()
+            .WithTracing(builder =>
+                {
+                    builder
+                        .AddHttpClientInstrumentation()
+                        .AddAspNetCoreInstrumentation()
+                        .ConfigureResource(options =>
+                        {
+                            options.AddService(
+                                telemetrySettings.ServiceName,
+                                serviceVersion: telemetrySettings.ServiceVersion,
+                                autoGenerateServiceInstanceId: true);
+                        })
+                        .AddConsoleExporter()
+                        .AddOtlpExporter(options => { options.Endpoint = new Uri(telemetrySettings.Endpoint); })
+                        .SetSampler<AlwaysOnSampler>();
+                }
+            )
+            .WithMetrics(builder =>
             {
-                c.AddService(telemetrySettings.ServiceName, serviceVersion: telemetrySettings.ServiceVersion,
-                    autoGenerateServiceInstanceId: true);
-            })
-            .WithTracing(b =>
-                b.AddAspNetCoreInstrumentation()
-                    .AddOtlpExporter(options => { options.Endpoint = new Uri(telemetrySettings.Endpoint); })
-            );
+                builder
+                    .AddAspNetCoreInstrumentation()
+                    .AddConsoleExporter()
+                    .AddOtlpExporter(options => { options.Endpoint = new Uri(telemetrySettings.Endpoint); });
+            });
     }
 
     public static void RegisterDependencies(this IServiceCollection services, IConfiguration configuration)
