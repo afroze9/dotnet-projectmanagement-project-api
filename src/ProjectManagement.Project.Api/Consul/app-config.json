@@ -1,4 +1,4 @@
-﻿{
+{
   "PersistenceSettings": {
     "ConnectionString": "User ID=developer;Password=dev123;Host=localhost;Port=5439;Database=project_management_project"
   },
@@ -15,7 +15,7 @@
     }
   },
   "Consul": {
-    "Token": "14d78685-3068-d9ae-b9d2-abe9aa240c72",
+    "Token": "5ca83f5d-6f13-cf5c-4cd3-5ed654d228c1",
     "Discovery": {
       "ServiceName": "project-api",
       "Scheme": "https",
