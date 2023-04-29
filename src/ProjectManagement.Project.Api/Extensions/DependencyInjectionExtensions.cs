@@ -155,7 +155,7 @@ public static class DependencyInjectionExtensions
         services.AddApplicationServices();
         services.AddAutoMapper(typeof(ProjectProfile));
         services.AddControllers();
-        services.AddDiscoveryClient();
+        services.AddDiscoveryClient(configuration);
         services.AddMediatR(options => options.RegisterServicesFromAssembly(typeof(Program).Assembly));
         services.AddPersistence(configuration);
         services.AddSecurity(configuration);
@@ -167,6 +167,8 @@ public static class DependencyInjectionExtensions
             options.AddPolicy("AllowAll", policy => { policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
         });
     }
+
+    //TODO: Add actuators
 
     private static void AddCrudPolicies(this AuthorizationOptions options, string resource)
     {

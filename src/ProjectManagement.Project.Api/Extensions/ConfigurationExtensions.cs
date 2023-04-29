@@ -7,8 +7,8 @@ public static class ConfigurationExtensions
 {
     public static void AddApplicationConfiguration(this ConfigurationManager configuration)
     {
-        // Settings for docker
-        configuration.AddJsonFile("hostsettings.json", true);
+        configuration.SetBasePath(Directory.GetCurrentDirectory())
+            .AddEnvironmentVariables();
 
         // Settings for consul kv
         ConsulKVSettings consulKvSettings = new ();
