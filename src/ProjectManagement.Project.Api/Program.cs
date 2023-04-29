@@ -43,7 +43,8 @@ app.MapGet("api/v1/Project",
     .WithTags("Project");
 
 app.MapGet("api/v1/Project/{id}",
-        async (int id, IRepository<Project> repository) => Results.Ok(await repository.GetByIdAsync(id)))
+        async (int id, IRepository<Project> repository) =>
+            Results.Ok(await repository.FirstOrDefaultAsync(new ProjectByIdSpec(id))))
     .Produces<Project>()
     .RequireAuthorization("read:project")
     .WithTags("Project");
@@ -69,7 +70,7 @@ app.MapPost("api/v1/Project", async (IRepository<Project> repository, IMapper ma
     .WithTags("Project");
 
 app.MapPut("api/v1/Project/{id}", async (int id, IRepository<Project> repository,
-        IValidator<ProjectRequestModel> validator, ProjectRequestModel req) =>
+        IValidator<UpdateProjectRequestModel> validator, UpdateProjectRequestModel req) =>
     {
         ValidationResult validationResult = await validator.ValidateAsync(req);
 
