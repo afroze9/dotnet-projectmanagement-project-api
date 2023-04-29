@@ -135,9 +135,21 @@ public static class DependencyInjectionExtensions
                                 serviceVersion: telemetrySettings.ServiceVersion,
                                 autoGenerateServiceInstanceId: true);
                         })
-                        .AddConsoleExporter()
-                        .AddOtlpExporter(options => { options.Endpoint = new Uri(telemetrySettings.Endpoint); })
-                        .SetSampler<AlwaysOnSampler>();
+                        .AddOtlpExporter(options => { options.Endpoint = new Uri(telemetrySettings.Endpoint); });
+
+                    if (telemetrySettings.EnableConsoleExporter)
+                    {
+                        builder.AddConsoleExporter();
+                    }
+
+                    if (telemetrySettings.EnableAlwaysOnSampler)
+                    {
+                        builder.SetSampler<AlwaysOnSampler>();
+                    }
+                    else
+                    {
+                        builder.SetSampler(new TraceIdRatioBasedSampler(telemetrySettings.SampleProbability));
+                    }
                 }
             )
             .WithMetrics(builder =>

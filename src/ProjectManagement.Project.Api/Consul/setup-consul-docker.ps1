@@ -54,7 +54,7 @@ echo "Token: $secret_id"
 $body = Get-Content -Raw -Path "app-config.json" | ConvertFrom-Json
 $body.Consul.Token = $secret_id
 $body.PersistenceSettings.ConnectionString = "User ID=developer;Password=dev123;Host=project-db;Port=5439;Database=project_management_project"
-$body.SerilogSettings.ElasticSearchSettings.Uri = "https://es-01:9200"
+$body.SerilogSettings.ElasticSearchSettings.Uri = "https://es01:9200"
 $body.TelemetrySettings.Endpoint = "http://jaeger:4317"
 $body | ConvertTo-Json -Depth 10 | Set-Content -Path "app-config.json"
 
