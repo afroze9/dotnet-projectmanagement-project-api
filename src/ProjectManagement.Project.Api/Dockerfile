@@ -5,7 +5,7 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["src/ProjectManagement.Project.Api/ProjectManagement.Project.Api.csproj", "src/ProjectManagement.Project.Api/"]
+COPY ["src/ProjectManagement.Project.Api/ProjectManagement.Project.Api.csproj", "src/ProjectManagement.Project.Api/nuget.config", "src/ProjectManagement.Project.Api/"]
 RUN dotnet restore "src/ProjectManagement.Project.Api/ProjectManagement.Project.Api.csproj"
 COPY . .
 WORKDIR "/src/src/ProjectManagement.Project.Api"

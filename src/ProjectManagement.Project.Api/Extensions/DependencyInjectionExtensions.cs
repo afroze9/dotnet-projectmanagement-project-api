@@ -2,7 +2,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -13,8 +12,13 @@ using ProjectManagement.ProjectAPI.Configuration;
 using ProjectManagement.ProjectAPI.Data;
 using ProjectManagement.ProjectAPI.Mapping;
 using ProjectManagement.ProjectAPI.Services;
+using Steeltoe.Connector.PostgreSql;
+using Steeltoe.Connector.PostgreSql.EFCore;
 using Steeltoe.Discovery.Client;
-using Winton.Extensions.Configuration.Consul;
+using Steeltoe.Management.Endpoint;
+using Steeltoe.Management.Endpoint.Health;
+using Steeltoe.Management.Endpoint.Info;
+using Steeltoe.Management.Endpoint.Refresh;
 
 namespace ProjectManagement.ProjectAPI.Extensions;
 
@@ -23,54 +27,15 @@ public static class DependencyInjectionExtensions
 {
     private static readonly string[] Actions = { "read", "write", "update", "delete" };
 
-    public static void AddConsulKv(this IConfigurationBuilder builder, ConsulKVSettings settings)
+    private static void AddActuators(this IServiceCollection services, IConfiguration configuration)
     {
-        builder.AddConsul(settings.Key, options =>
-        {
-            options.ConsulConfigurationOptions = config =>
-            {
-                config.Address = new Uri(settings.Url);
-                config.Token = settings.Token;
-            };
-
-            options.Optional = false;
-            options.ReloadOnChange = true;
-        });
+        services.AddHealthActuator(configuration);
+        services.AddInfoActuator(configuration);
+        services.AddHealthChecks();
+        services.AddRefreshActuator();
+        services.ActivateActuatorEndpoints();
     }
-
-    private static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
-    {
-        PersistenceSettings persistenceSettings = new () { ConnectionString = string.Empty };
-        configuration.GetRequiredSection(nameof(PersistenceSettings)).Bind(persistenceSettings);
-
-        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
-        services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
-        services.AddDbContext<ApplicationDbContext>(options =>
-        {
-            options.UseNpgsql(persistenceSettings.ConnectionString);
-        });
-    }
-
-    private static void AddSecurity(this IServiceCollection services, IConfiguration configuration)
-    {
-        Auth0Settings auth0Settings = new ();
-        configuration.GetRequiredSection(nameof(Auth0Settings)).Bind(auth0Settings);
-
-        services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
-        {
-            options.Authority = auth0Settings.Authority;
-            options.Audience = auth0Settings.Audience;
-        });
-
-
-        services.AddAuthorization(options => { options.AddCrudPolicies("project"); });
-        services.AddSingleton<IAuthorizationHandler, ScopeRequirementHandler>();
-    }
-
+    
     private static void AddApiDocumentation(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
@@ -110,12 +75,55 @@ public static class DependencyInjectionExtensions
             });
         });
     }
-
+    
     private static void AddApplicationServices(this IServiceCollection services)
     {
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
     }
 
+    private static void AddConsulDiscovery(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDiscoveryClient(configuration);
+    }
+
+    private static void AddCrudPolicies(this AuthorizationOptions options, string resource)
+    {
+        foreach (string action in Actions)
+        {
+            options.AddPolicy($"{action}:{resource}",
+                policy => policy.Requirements.Add(new ScopeRequirement($"{action}:{resource}")));
+        }
+    }
+
+    private static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
+        services.AddDbContext<ApplicationDbContext>(options => { options.UseNpgsql(configuration); });
+
+        services.AddPostgresHealthContributor(configuration);
+    }
+
+    private static void AddSecurity(this IServiceCollection services, IConfiguration configuration)
+    {
+        Auth0Settings auth0Settings = new ();
+        configuration.GetRequiredSection(nameof(Auth0Settings)).Bind(auth0Settings);
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.Authority = auth0Settings.Authority;
+            options.Audience = auth0Settings.Audience;
+        });
+
+
+        services.AddAuthorization(options => { options.AddCrudPolicies("project"); });
+        services.AddSingleton<IAuthorizationHandler, ScopeRequirementHandler>();
+    }
+    
     private static void AddTelemetry(this IServiceCollection services, IConfiguration configuration)
     {
         TelemetrySettings telemetrySettings = new ();
@@ -160,14 +168,15 @@ public static class DependencyInjectionExtensions
                     .AddOtlpExporter(options => { options.Endpoint = new Uri(telemetrySettings.Endpoint); });
             });
     }
-
+    
     public static void RegisterDependencies(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddActuators(configuration);
         services.AddApiDocumentation();
         services.AddApplicationServices();
         services.AddAutoMapper(typeof(ProjectProfile));
+        services.AddConsulDiscovery(configuration);
         services.AddControllers();
-        services.AddDiscoveryClient(configuration);
         services.AddMediatR(options => options.RegisterServicesFromAssembly(typeof(Program).Assembly));
         services.AddPersistence(configuration);
         services.AddSecurity(configuration);
@@ -178,16 +187,5 @@ public static class DependencyInjectionExtensions
         {
             options.AddPolicy("AllowAll", policy => { policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
         });
-    }
-
-    //TODO: Add actuators
-
-    private static void AddCrudPolicies(this AuthorizationOptions options, string resource)
-    {
-        foreach (string action in Actions)
-        {
-            options.AddPolicy($"{action}:{resource}",
-                policy => policy.Requirements.Add(new ScopeRequirement($"{action}:{resource}")));
-        }
     }
 }

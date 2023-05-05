@@ -1,21 +1,27 @@
 {
-  "PersistenceSettings": {
-    "ConnectionString": "User ID=developer;Password=dev123;Host=localhost;Port=5439;Database=project_management_project"
-  },
   "Auth0Settings": {
     "Authority": "https://teamly.us.auth0.com",
     "Audience": "projectmanagement"
   },
+  "Postgres": {
+    "Client": {
+      "Host": "project-db",
+      "Port": 5439,
+      "Username": "developer",
+      "Password": "dev123",
+      "Database": "project_management_project"
+    }
+  },
   "SerilogSettings": {
     "ElasticSearchSettings": {
-      "Uri": "https://localhost:9200",
+      "Uri": "https://es01:9200",
       "Username": "elastic",
       "Password": "dev123",
       "IndexFormat": "logs-project-api-{0:yyyy.MM}"
     }
   },
   "Consul": {
-    "Token": "335d73af-701b-aed3-3201-c9feedb2c347",
+    "Token": "56a36fb1-3df2-c27c-665e-4ba80807a889",
     "Discovery": {
       "ServiceName": "project-api",
       "Scheme": "https",
@@ -26,11 +32,26 @@
     }
   },
   "TelemetrySettings": {
-    "Endpoint": "http://localhost:4317",
+    "Endpoint": "http://jaeger:4317",
     "ServiceName": "project-api",
     "ServiceVersion": "v1",
     "EnableAlwaysOnSampler": false,
     "SampleProbability": 0.2,
     "EnableConsoleExporter": false
+  },
+  "management": {
+    "endpoints": {
+      "health": {
+        "showdetails": "always"
+      },
+      "enabled": true,
+      "actuator": {
+        "exposure": {
+          "include": [
+            "*"
+          ]
+        }
+      }
+    }
   }
 }

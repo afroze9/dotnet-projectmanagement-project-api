@@ -43,9 +43,18 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0"/>
         <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="9.0.0"/>
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
+        <PackageReference Include="Steeltoe.Connector.ConnectorCore" Version="3.2.3"/>
+        <PackageReference Include="Steeltoe.Connector.EFCore" Version="3.2.3"/>
         <PackageReference Include="Steeltoe.Discovery.Consul" Version="3.2.3"/>
+        <PackageReference Include="Steeltoe.Management.EndpointCore" Version="3.2.3"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
         <PackageReference Include="Winton.Extensions.Configuration.Consul" Version="3.2.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\..\..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
 </Project>
