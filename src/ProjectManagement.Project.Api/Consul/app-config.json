@@ -21,7 +21,7 @@
     }
   },
   "Consul": {
-    "Token": "56a36fb1-3df2-c27c-665e-4ba80807a889",
+    "Token": "fd445686-1576-4111-1370-dea86e7a0d28",
     "Discovery": {
       "ServiceName": "project-api",
       "Scheme": "https",
