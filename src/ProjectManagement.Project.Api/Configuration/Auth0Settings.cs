@@ -1,5 +1,6 @@
 ﻿namespace ProjectManagement.ProjectAPI.Configuration;
 
+[ExcludeFromCodeCoverage]
 public class Auth0Settings
 {
     public string Authority { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-name: Build
+﻿name: Build
 
 on:
   push:
@@ -62,6 +62,7 @@ jobs:
         run: |
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"afroze9_dotnet-projectmanagement-project-api" /o:"afroze9-main" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
           dotnet build ./src/ProjectManagement.Project.Api/ -c Release --no-restore
+          dotnet-coverage collect 'dotnet test ./tests/ProjectManagement.Project.Api.UnitTests/ -s ./tests/ProjectManagement.Project.Api.UnitTests/.runsettings' -f xml  -o 'coverage.xml'
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
   deploy:
