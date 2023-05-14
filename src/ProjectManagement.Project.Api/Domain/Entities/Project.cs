@@ -23,9 +23,23 @@ public class Project : EntityBase, IAggregateRoot, IAuditable<string>
 
     public Priority Priority { get; private set; }
 
-    public ProjectStatus Status =>
-        _todoItems.All(x => x.IsCompleted) ? ProjectStatus.Completed :
-        _todoItems.All(x => !x.IsCompleted) ? ProjectStatus.NotStarted : ProjectStatus.InProgress;
+    public ProjectStatus Status
+    {
+        get
+        {
+            if (_todoItems.All(x => x.IsCompleted))
+            {
+                return ProjectStatus.Completed;
+            }
+
+            if (_todoItems.All(x => !x.IsCompleted))
+            {
+                return ProjectStatus.NotStarted;
+            }
+
+            return ProjectStatus.InProgress;
+        }
+    }
 
     public string CreatedBy { get; set; } = string.Empty;
 
