@@ -10,6 +10,7 @@ using ProjectManagement.ProjectAPI.Data;
 
 namespace ProjectManagement.ProjectAPI.Data.Migrations
 {
+    [ExcludeFromCodeCoverage]
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {

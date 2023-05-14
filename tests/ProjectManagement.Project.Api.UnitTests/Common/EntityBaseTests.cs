@@ -1,7 +1,7 @@
 ﻿using Moq;
 using ProjectManagement.ProjectAPI.Common;
 
-namespace ProjectManagement.Project.Api.UnitTests.Common;
+namespace ProjectManagement.ProjectAPI.UnitTests.Common;
 
 [ExcludeFromCodeCoverage]
 public class EntityBaseTests

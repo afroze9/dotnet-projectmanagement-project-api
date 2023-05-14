@@ -5,6 +5,7 @@ using ProjectManagement.ProjectAPI.Domain.Specifications;
 
 namespace ProjectManagement.ProjectAPI.Models.Validation;
 
+[ExcludeFromCodeCoverage]
 public class UpdateProjectRequestModelValidator : AbstractValidator<UpdateProjectRequestModel>
 {
     public UpdateProjectRequestModelValidator(IRepository<Project> repository)
