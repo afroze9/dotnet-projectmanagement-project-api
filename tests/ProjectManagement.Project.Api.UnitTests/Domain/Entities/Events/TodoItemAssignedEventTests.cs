@@ -4,6 +4,7 @@ using ProjectManagement.ProjectAPI.Domain.Entities.Events;
 
 namespace ProjectManagement.ProjectAPI.UnitTests.Domain.Entities.Events;
 
+[ExcludeFromCodeCoverage]
 public class TodoItemAssignedEventTests
 {
     [Fact]

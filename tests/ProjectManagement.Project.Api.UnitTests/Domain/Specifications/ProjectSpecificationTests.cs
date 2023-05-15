@@ -3,6 +3,7 @@ using ProjectManagement.ProjectAPI.Domain.Specifications;
 
 namespace ProjectManagement.ProjectAPI.UnitTests.Domain.Specifications;
 
+[ExcludeFromCodeCoverage]
 public class ProjectSpecificationTests
 {
     private readonly List<Project> _projects = new ()

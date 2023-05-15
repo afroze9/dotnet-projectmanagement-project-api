@@ -2,6 +2,7 @@
 
 namespace ProjectManagement.ProjectAPI.UnitTests.Domain.Entities;
 
+[ExcludeFromCodeCoverage]
 public class ProjectTests
 {
     [Fact]
